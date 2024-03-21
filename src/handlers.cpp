@@ -10,8 +10,7 @@ public:
         return *this;
     }
 
-    template <typename... Args>
-    virtual void handle(ProgramContext &ctx, Args... args) {}
+    virtual void handle(ParserContext &ctx) {}
 
     virtual void complete() {
 
@@ -21,12 +20,26 @@ public:
 template <typename T>
 class CommandHandler: public AbstractHandler {
 public:
-    template <typename... Args>
-    void handle(ProgramContext &ctx, Args... args) {
+    void handle(ProgramContext &ctx) {
         ctx.commands.push_back(T(args));
     }
 };
 
-class LabelHandler: public AbstractHandler {
+class RegisterHandler: public AbstractHandler {
+public:
+    void handle(ProgramContext &ctx) {
 
+    }
+};
+
+class LabelHandler: public AbstractHandler {
+public:
+    void handle(ParserContext &ctx) {
+        if (ctx.labels.find(ctx.token) == ctx.labels.end()) {
+            ctx.labels[ctx.token] = ...;
+        } else {
+            ctx.error_flag = true;
+            ctx.error_msg = "Duplicate label found";
+        }
+    }
 };

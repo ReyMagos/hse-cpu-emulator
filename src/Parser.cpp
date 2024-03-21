@@ -4,23 +4,20 @@
 #include <vector>
 #include <cctype>
 
-class AlreadyRegistered: std::exception {
-    std::string key;
-
-public:
-    const char* what() const noexcept {
-        return std::format("Handler with key \"{}\" already registered", key);
-    }
-};
 
 struct ParserContext {
-
+    std::string token;
     std::vector<AbstractCommand> commands;
-    std::unordered_map<std::string, int> labels;
+    std::unordered_map<std::string, unsigned> labels;
+
+    unsigned carry;
+    bool error_flag = false;
+    std::string error_msg;
 };
 
 class Parser {
-    std::unordered_map<std::string, AbstractHandler> handlers;
+    std::unordered_map<char, AbstractHandler> markers;
+    std::unordered_map<std::string, AbstractHandler> keywords;
     ParserContext ctx;
 
 public:
@@ -36,21 +33,43 @@ public:
     }
 
     void parse(std::ifstream source) {
+        unsigned n = 1;
+        std::string line;
+        while (std::getline(source, line)) {
+            parse_line(line);
 
-
-        if (!sourse.is_open())
-            throw std::runtime_error("");
-
-        char c;
-        std::string token;
-        while ((c = source.get()) != EOF)) {
-            if (std::isalnum(c))
-                token += c;
-            else {
-
+            if (ctx.error_flag) {
+                std::cerr << "Error at line " << n << ":\n"
+                          << "\t" << line << "\n"
+                          << std::setw(ctx.carry) << "^\n"
+                          << ctx.error_msg << endl;
+                return;
             }
+
+            n++;
         }
 
-        source.close()
+        if (source.bad())
+            perror("Parser reading error");
+
+        source.close();
+    }
+
+    void parse_line(std::string &line) {
+        for (ctx.carry = 0; ctx.carry < line.size(); ++ctx.carry) {
+            char c = line[ctx.carry];
+
+            if (std::isalnum(c)) {
+                
+            } else if (markers.find(c) != markers.end()) {
+                markers[c].handle(ctx);
+            } else if (c == ' ') {
+
+            } else {
+                ctx.error_flag = true;
+                ctx.error_msg = "Unexpected symbol";
+                return;
+            }
+        }
     }
 };

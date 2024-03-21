@@ -45,6 +45,12 @@ public:
         data[head++] = value;
     }
 
+    void push(T&& value) {
+        if (head >= capacity)
+            throw OverflowException();
+        data[head++] = value;
+    }
+
     T pop() {
         if (empty())
             throw UnderflowException();
